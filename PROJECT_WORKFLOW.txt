@@ -1,0 +1,108 @@
+================================================================================
+          QUIZMASTER — ONLINE QUIZ PLATFORM
+              STEP-BY-STEP PROJECT WORKFLOW
+================================================================================
+
+1. APPLICATION LAUNCH WORKFLOW
+--------------------------------------------------------------------------------
+[Step 1] Launching the App
+  - User double-clicks `run.bat` (or executes `quizmaster.Main`).
+  - `DBConnection` checks connectivity to Oracle Database (`jdbc:oracle:thin:@localhost:1521/freepdb1`).
+  - `LoginFrame` Swing window opens on the screen.
+
+
+2. USER AUTHENTICATION WORKFLOW
+--------------------------------------------------------------------------------
+[Option A] Existing User Login:
+  1. User enters Username and Password.
+  2. User clicks "Login".
+  3. `AuthenticationService` hashes the typed password using SHA-256 algorithm.
+  4. `UserDAO` executes SQL: 
+     `SELECT * FROM USERS WHERE USERNAME = ?`
+  5. If user exists and password hash matches:
+     - If ROLE == "ADMIN"   --> Opens Admin Dashboard (`AdminDashboardFrame`).
+     - If ROLE == "STUDENT" --> Opens Student Dashboard (`StudentDashboardFrame`).
+  6. If credentials do not match --> Shows "Invalid Username or Password" alert dialog.
+
+[Option B] New Student Registration:
+  1. Student clicks "Register Here" on the login screen.
+  2. Student enters Full Name, Username, and Password in `RegisterFrame`.
+  3. `AuthenticationService` checks if Username already exists in database via `UserDAO`.
+  4. If unique, password is encrypted with SHA-256 and inserted into `USERS` table with ROLE = 'STUDENT'.
+  5. Shows success message and redirects to Login screen.
+
+
+3. ADMIN WORKFLOW
+--------------------------------------------------------------------------------
+When logged in as Admin, the Admin Dashboard presents 3 primary modules:
+
+[Module 1] Question Management (`QuestionManagementFrame`)
+  - Admin views all questions loaded in a `JTable`.
+  - Admin can filter questions by Category (e.g. Sports, Science, Cinema) or Difficulty (EASY, MEDIUM, HARD).
+  - Admin clicks "Add Question":
+      - Enters question text, Category, Difficulty, Options A/B/C/D, Correct Option, Marks, and Active Status ('Y'/'N').
+      - Saves record via `QuestionDAO` -> `INSERT INTO QUESTIONS ...`.
+  - Admin clicks "Edit Question":
+      - Updates question text or options via `QuestionDAO` -> `UPDATE QUESTIONS ...`.
+  - Admin clicks "Delete Question":
+      - Confirms deletion popup -> `DELETE FROM QUESTIONS WHERE QUESTION_ID = ?`.
+
+[Module 2] View Student Attempts (`AdminResultsFrame`)
+  - Displays a detailed `JTable` of all student quiz attempts across all categories.
+  - Columns shown: Student Name, Category, Date/Time, Total Questions, Attempted, Correct, Incorrect, Marks Obtained, Percentage.
+
+[Module 3] Quiz Statistics (`StatisticsFrame`)
+  - Displays overview cards: Total Quiz Attempts, Overall Average Score, Highest Percentage Achieved.
+  - Displays category-wise performance analytics.
+
+
+4. STUDENT WORKFLOW (TAKING A TIMED QUIZ)
+--------------------------------------------------------------------------------
+When logged in as Student, the Student Dashboard presents 2 choices: "Start Quiz" and "My Results".
+
+[Step 1] Quiz Setup (`QuizSetupFrame`)
+  - Student selects Category (e.g. "Science & Technology", "Sports", or "Mixed Quiz / All Categories").
+  - Student selects Difficulty ("EASY", "MEDIUM", "HARD", or "ANY").
+  - Student enters Number of Questions (e.g., 5 questions).
+  - System queries `QuestionDAO` to ensure enough active questions exist.
+  - Click "Start Quiz" -> Launches `QuizFrame`.
+
+[Step 2] Timed Quiz Interface (`QuizFrame`)
+  - Displays Question 1 of N, Timer Countdown (e.g. 05:00 minutes remaining), and 4 Radio Button Options (A, B, C, D).
+  - Student clicks Option A/B/C/D to select an answer.
+  - Student clicks "Next" or "Previous" to navigate between questions.
+  - Timer decrements every 1 second via `javax.swing.Timer`.
+  - If timer reaches 00:00 -> System automatically triggers submission.
+
+[Step 3] Quiz Submission & Scoring (`QuizService.submitQuiz`)
+  - Student clicks "Submit" (or time expires).
+  - `QuizService` processes answers:
+      - Checks each question's selected option against `CORRECT_OPTION`.
+      - Computes: Attempted Count, Correct Count, Incorrect Count, Unanswered Count, Total Marks, Obtained Marks, and Percentage (`Obtained / Total * 100`).
+  - Database Transaction:
+      1. Inserts attempt summary into `QUIZ_ATTEMPTS` table via `QuizAttemptDAO`.
+      2. Inserts individual responses into `ATTEMPT_ANSWERS` table via `AttemptAnswerDAO`.
+
+[Step 4] Instant Result Display (`ResultFrame`)
+  - Displays score summary card: Category, Total Questions, Correct/Incorrect count, Marks Obtained, Percentage (Green if >= 60%, Red if < 60%).
+
+[Step 5] Score History (`ResultHistoryFrame`)
+  - Student can view a table of all their past quiz attempts anytime under "My Results".
+
+
+5. DATABASE DATA FLOW SUMMARY
+--------------------------------------------------------------------------------
+  [Swing GUI Action] 
+         │
+         ▼
+  [Service Layer Logic] (Calculates score & percentage)
+         │
+         ▼
+  [DAO Layer (UserDAO / QuestionDAO / QuizAttemptDAO)] 
+         │
+         ▼
+  [JDBC PreparedStatement SQL Queries]
+         │
+         ▼
+  [Oracle Database Tables (USERS, CATEGORIES, QUESTIONS, QUIZ_ATTEMPTS, ATTEMPT_ANSWERS)]
+================================================================================

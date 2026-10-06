@@ -1,0 +1,9 @@
+# =====================================================================
+# QuizMaster Database Configuration Template
+# Copy this file to 'db.properties' and fill in your Oracle credentials:
+# =====================================================================
+
+DB_URL=jdbc:oracle:thin:@localhost:1521/freepdb1
+DB_USERNAME=YOUR_ORACLE_USERNAME
+DB_PASSWORD=YOUR_ORACLE_PASSWORD
+QUIZ_TIME_SECONDS=300
