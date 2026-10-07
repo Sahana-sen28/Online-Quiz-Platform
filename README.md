@@ -139,35 +139,7 @@ Java Swing Frontend → Service Layer → DAO Layer → JDBC → Oracle Database
 7. Submit and view results
 8. Check "My Results" for history
 
-## 12. Database Verification Queries
-Run these in Oracle SQL Developer to verify the application is working:
-```sql
--- Check users
-SELECT USER_ID, USERNAME, FULL_NAME, ROLE FROM USERS;
-
--- Check categories
-SELECT * FROM CATEGORIES ORDER BY CATEGORY_NAME;
-
--- Check questions
-SELECT QUESTION_ID, SUBSTR(QUESTION_TEXT,1,50), CATEGORY_ID, DIFFICULTY, MARKS
-FROM QUESTIONS ORDER BY QUESTION_ID;
-
--- Check quiz attempts
-SELECT A.ATTEMPT_ID, U.FULL_NAME, C.CATEGORY_NAME,
-       A.CORRECT_ANSWERS, A.TOTAL_QUESTIONS, A.PERCENTAGE
-FROM QUIZ_ATTEMPTS A
-JOIN USERS U ON A.USER_ID = U.USER_ID
-LEFT JOIN CATEGORIES C ON A.CATEGORY_ID = C.CATEGORY_ID
-ORDER BY A.START_TIME DESC;
-
--- Check individual answers
-SELECT AA.ATTEMPT_ANSWER_ID, AA.ATTEMPT_ID, AA.QUESTION_ID,
-       AA.SELECTED_OPTION, AA.IS_CORRECT, AA.MARKS_OBTAINED
-FROM ATTEMPT_ANSWERS AA
-ORDER BY AA.ATTEMPT_ID, AA.ATTEMPT_ANSWER_ID;
-```
-
-## 13. Common Errors and Fixes
+## 12. Common Errors and Fixes
 - **ORA-01017:** Invalid username/password → Check DB_USERNAME and DB_PASSWORD
 - **ORA-12514:** Listener does not know of service → Check service name in DB_URL
 - **ORA-12541:** No listener → Oracle Listener not running, start it: `lsnrctl start`
@@ -179,7 +151,7 @@ ORDER BY AA.ATTEMPT_ID, AA.ATTEMPT_ANSWER_ID;
 - **Foreign key violation** → Trying to insert with invalid CATEGORY_ID or USER_ID
 - **Not enough questions** → Add more questions to the selected category/difficulty
 
-## 14. Demo Flow (5-10 minutes)
+## 13. Demo Flow (5-10 minutes)
 1. **Start** the application (`mvn exec:java`)
 2. **Admin Login** with admin credentials
 3. **Show Question Management** — demonstrate Add, Edit, filter by category
@@ -194,22 +166,8 @@ ORDER BY AA.ATTEMPT_ID, AA.ATTEMPT_ANSWER_ID;
 12. **View History** — show past attempts in table
 13. **Show Oracle** — run SELECT queries to show data stored in database
 
-## 15. Viva Questions & Answers
-- **Why Java Swing?** → Standard GUI toolkit bundled with JDK, no external dependencies, suitable for desktop apps, good for learning GUI concepts.
-- **Why JDBC?** → Standard Java API for database connectivity, gives direct control over SQL queries, no ORM overhead, teaches fundamentals of database programming.
-- **Why Oracle?** → Industry-standard enterprise RDBMS, supports ACID transactions, widely used in corporate environments, good for learning SQL and database concepts.
-- **Why DAO pattern?** → Separates database access from business logic, makes code maintainable, if database changes only DAO layer needs updating.
-- **Why service layer?** → Contains business logic (scoring, validation, authentication), keeps UI code clean, reusable across different UIs.
-- **Why 5 tables?** → Normalized design: Users (authentication), Categories (quiz topics), Questions (quiz content), Quiz_Attempts (attempt summary), Attempt_Answers (individual responses for analysis).
-- **Why normalization?** → Eliminates data redundancy, ensures data integrity, follows 3NF (each table has single-purpose columns with no transitive dependencies).
-- **Why foreign keys?** → Enforce referential integrity (can't have answers without valid questions, can't have attempts without valid users).
-- **Why PreparedStatement?** → Prevents SQL injection attacks, pre-compiles SQL for better performance, handles data type conversion automatically.
-- **Why transactions?** → Ensures quiz submission is atomic (all-or-nothing), if answer insertion fails we rollback the attempt too, prevents partial/inconsistent data.
-- **How does the timer work?** → `javax.swing.Timer` fires `ActionEvent` every 1000ms, handler decrements counter and updates label, when counter reaches 0 it auto-submits the quiz.
-- **How is score calculated?** → Iterate through questions, compare student's selected option with correct option, count correct/incorrect/unanswered, sum marks for correct answers, calculate percentage.
-- **How is Mixed Quiz implemented?** → Questions fetched from all categories (no category filter in SQL), CATEGORY_ID stored as NULL in `QUIZ_ATTEMPTS`, individual questions retain their actual category IDs in `ATTEMPT_ANSWERS`.
 
-## 16. Project Structure
+## 14. Project Structure
 ```text
 quizmaster/
 ├── pom.xml                     # Maven configuration and dependencies
